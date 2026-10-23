@@ -13,6 +13,7 @@ import {
   BackupRecord,
   DashboardStats,
 } from './types';
+import { localStore } from './localStore';
 
 function getToken(): string | null {
   return localStorage.getItem('simaset_token');
@@ -24,6 +25,25 @@ export function setToken(token: string) {
 
 export function clearToken() {
   localStorage.removeItem('simaset_token');
+}
+
+let isClientMode = false;
+if (typeof window !== 'undefined' && localStorage.getItem('simaset_client_mode') === 'true') {
+  isClientMode = true;
+}
+
+export function enableClientMode() {
+  isClientMode = true;
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('simaset_client_mode', 'true');
+  }
+}
+
+export function disableClientMode() {
+  isClientMode = false;
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('simaset_client_mode');
+  }
 }
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -58,75 +78,124 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   return response.json();
 }
 
+/**
+ * Executes a network API request first. If the host returns 404 (e.g. static Vercel deployment)
+ * or network fails, automatically falls back to the in-browser local storage database.
+ */
+async function execute<T>(
+  endpoint: string,
+  options: RequestInit | undefined,
+  localFallback: () => T | Promise<T>
+): Promise<T> {
+  if (isClientMode) {
+    return localFallback();
+  }
+
+  try {
+    return await request<T>(endpoint, options);
+  } catch (err: any) {
+    const is404 = err.message && (err.message.includes('404') || err.message.includes('Not Found'));
+    const isNetwork =
+      err.name === 'TypeError' ||
+      (err.message && (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')));
+
+    if (is404 || isNetwork) {
+      console.warn(`[SIM-ASET] Backend endpoint (${endpoint}) returned 404 or is unavailable. Activating standalone local mode.`);
+      enableClientMode();
+      return localFallback();
+    }
+    throw err;
+  }
+}
+
 // API methods
 export const api = {
   // Auth
   async login(username: string, password: string): Promise<{ token: string; user: User }> {
-    return request('/api/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ username, password }),
-    });
+    return execute(
+      '/api/auth/login',
+      {
+        method: 'POST',
+        body: JSON.stringify({ username, password }),
+      },
+      () => localStore.login(username, password)
+    );
   },
 
   async getMe(): Promise<{ user: User }> {
-    return request('/api/auth/me');
+    return execute('/api/auth/me', undefined, () => localStore.getMe());
   },
 
   async logout(): Promise<{ success: boolean }> {
-    return request('/api/auth/logout', { method: 'POST' });
+    return execute('/api/auth/logout', { method: 'POST' }, () => localStore.logout());
   },
 
   // Users
   async getUsers(): Promise<User[]> {
-    return request('/api/users');
+    return execute('/api/users', undefined, () => localStore.getUsers());
   },
 
   async createUser(data: any): Promise<User> {
-    return request('/api/users', { method: 'POST', body: JSON.stringify(data) });
+    return execute(
+      '/api/users',
+      { method: 'POST', body: JSON.stringify(data) },
+      () => localStore.createUser(data)
+    );
   },
 
   async updateUser(id: string, data: any): Promise<User> {
-    return request(`/api/users/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+    return execute(
+      `/api/users/${id}`,
+      { method: 'PUT', body: JSON.stringify(data) },
+      () => localStore.updateUser(id, data)
+    );
   },
 
   async resetUserPassword(id: string, newPassword: string): Promise<{ success: boolean }> {
-    return request(`/api/users/${id}/reset-password`, {
-      method: 'POST',
-      body: JSON.stringify({ newPassword }),
-    });
+    return execute(
+      `/api/users/${id}/reset-password`,
+      { method: 'POST', body: JSON.stringify({ newPassword }) },
+      () => localStore.resetUserPassword(id)
+    );
   },
 
   // Dashboard Stats
   async getDashboardStats(): Promise<DashboardStats> {
-    return request('/api/dashboard/stats');
+    return execute('/api/dashboard/stats', undefined, () => localStore.getDashboardStats());
   },
 
   // Inventory
   async getInventoryItems(params?: Record<string, string>): Promise<InventoryItem[]> {
     const qs = params ? '?' + new URLSearchParams(params).toString() : '';
-    return request(`/api/inventory/items${qs}`);
+    return execute(`/api/inventory/items${qs}`, undefined, () => localStore.getInventoryItems(params));
   },
 
   async getInventoryItem(id: string): Promise<InventoryItem> {
-    return request(`/api/inventory/items/${id}`);
+    return execute(`/api/inventory/items/${id}`, undefined, () => localStore.getInventoryItem(id));
   },
 
   async createInventoryItem(data: Partial<InventoryItem>): Promise<InventoryItem> {
-    return request('/api/inventory/items', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    return execute(
+      '/api/inventory/items',
+      { method: 'POST', body: JSON.stringify(data) },
+      () => localStore.createInventoryItem(data)
+    );
   },
 
   async updateInventoryItem(id: string, data: Partial<InventoryItem>): Promise<InventoryItem> {
-    return request(`/api/inventory/items/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
+    return execute(
+      `/api/inventory/items/${id}`,
+      { method: 'PUT', body: JSON.stringify(data) },
+      () => localStore.updateInventoryItem(id, data)
+    );
   },
 
   async deleteInventoryItem(id: string): Promise<{ success: boolean }> {
-    return request(`/api/inventory/items/${id}`, { method: 'DELETE' });
+    return execute(
+      `/api/inventory/items/${id}`,
+      { method: 'DELETE' },
+      () => localStore.deleteInventoryItem(id)
+    );
   },
 
   async transferInventoryItem(data: {
@@ -137,185 +206,226 @@ export const api = {
     transferDate: string;
     notes: string;
   }): Promise<LocationHistory> {
-    return request('/api/inventory/transfer', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    return execute(
+      '/api/inventory/transfer',
+      { method: 'POST', body: JSON.stringify(data) },
+      () => localStore.transferInventoryItem(data)
+    );
   },
 
   async getLocationHistories(): Promise<LocationHistory[]> {
-    return request('/api/inventory/histories');
+    return execute('/api/inventory/histories', undefined, () => localStore.getLocationHistories());
   },
 
   async updateLocationHistory(
     id: string,
     data: Partial<LocationHistory> & { syncItemLocation?: boolean }
   ): Promise<LocationHistory> {
-    return request(`/api/inventory/histories/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
+    return execute(
+      `/api/inventory/histories/${id}`,
+      { method: 'PUT', body: JSON.stringify(data) },
+      () => localStore.updateLocationHistory(id, data)
+    );
   },
 
-  async deleteLocationHistory(id: string, revertLocation: boolean = false): Promise<{ success: boolean; message: string }> {
-    return request(`/api/inventory/histories/${id}?revertLocation=${revertLocation}`, {
-      method: 'DELETE',
-    });
+  async deleteLocationHistory(
+    id: string,
+    revertLocation: boolean = false
+  ): Promise<{ success: boolean; message: string }> {
+    return execute(
+      `/api/inventory/histories/${id}?revertLocation=${revertLocation}`,
+      { method: 'DELETE' },
+      () => localStore.deleteLocationHistory(id, revertLocation)
+    );
   },
 
   // Needs
   async getNeeds(params?: Record<string, string>): Promise<NeedItem[]> {
     const qs = params ? '?' + new URLSearchParams(params).toString() : '';
-    return request(`/api/needs${qs}`);
+    return execute(`/api/needs${qs}`, undefined, () => localStore.getNeeds(params));
   },
 
   async createNeed(data: Partial<NeedItem>): Promise<NeedItem> {
-    return request('/api/needs', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    return execute(
+      '/api/needs',
+      { method: 'POST', body: JSON.stringify(data) },
+      () => localStore.createNeed(data)
+    );
   },
 
   async updateNeed(id: string, data: Partial<NeedItem>): Promise<NeedItem> {
-    return request(`/api/needs/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
+    return execute(
+      `/api/needs/${id}`,
+      { method: 'PUT', body: JSON.stringify(data) },
+      () => localStore.updateNeed(id, data)
+    );
   },
 
   async deleteNeed(id: string): Promise<{ success: boolean }> {
-    return request(`/api/needs/${id}`, { method: 'DELETE' });
+    return execute(
+      `/api/needs/${id}`,
+      { method: 'DELETE' },
+      () => localStore.deleteNeed(id)
+    );
   },
 
   // Procurement
   async getProcurements(): Promise<ProcurementItem[]> {
-    return request('/api/procurements');
+    return execute('/api/procurements', undefined, () => localStore.getProcurements());
   },
 
   async createProcurement(data: Partial<ProcurementItem>): Promise<ProcurementItem> {
-    return request('/api/procurements', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    return execute(
+      '/api/procurements',
+      { method: 'POST', body: JSON.stringify(data) },
+      () => localStore.createProcurement(data)
+    );
   },
 
   async updateProcurement(id: string, data: Partial<ProcurementItem>): Promise<ProcurementItem> {
-    return request(`/api/procurements/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
+    return execute(
+      `/api/procurements/${id}`,
+      { method: 'PUT', body: JSON.stringify(data) },
+      () => localStore.updateProcurement(id, data)
+    );
   },
 
-  async receiveProcurementToInventory(id: string, data: any): Promise<{ inventoryItem: InventoryItem; procurement: ProcurementItem }> {
-    return request(`/api/procurements/${id}/receive-and-inventory`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+  async receiveProcurementToInventory(
+    id: string,
+    data: any
+  ): Promise<{ inventoryItem: InventoryItem; procurement: ProcurementItem }> {
+    return execute(
+      `/api/procurements/${id}/receive-and-inventory`,
+      { method: 'POST', body: JSON.stringify(data) },
+      () => localStore.receiveProcurementToInventory(id, data)
+    );
   },
 
   async deleteProcurement(id: string): Promise<{ success: boolean }> {
-    return request(`/api/procurements/${id}`, { method: 'DELETE' });
+    return execute(
+      `/api/procurements/${id}`,
+      { method: 'DELETE' },
+      () => localStore.deleteProcurement(id)
+    );
   },
 
   // Locations
   async getLocations(): Promise<LocationItem[]> {
-    return request('/api/master/locations');
+    return execute('/api/master/locations', undefined, () => localStore.getLocations());
   },
 
   async createLocation(name: string, description: string): Promise<LocationItem> {
-    return request('/api/master/locations', {
-      method: 'POST',
-      body: JSON.stringify({ name, description }),
-    });
+    return execute(
+      '/api/master/locations',
+      { method: 'POST', body: JSON.stringify({ name, description }) },
+      () => localStore.createLocation(name, description)
+    );
   },
 
-  async updateLocation(id: string, data: { name: string; description: string; isActive?: boolean }): Promise<LocationItem> {
-    return request(`/api/master/locations/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
+  async updateLocation(
+    id: string,
+    data: { name: string; description: string; isActive?: boolean }
+  ): Promise<LocationItem> {
+    return execute(
+      `/api/master/locations/${id}`,
+      { method: 'PUT', body: JSON.stringify(data) },
+      () => localStore.updateLocation(id, data)
+    );
   },
 
   // Correction Notes (Kepala Sekolah)
   async getCorrectionNotes(): Promise<CorrectionNote[]> {
-    return request('/api/correction-notes');
+    return execute('/api/correction-notes', undefined, () => localStore.getCorrectionNotes());
   },
 
   async createCorrectionNote(data: Partial<CorrectionNote>): Promise<CorrectionNote> {
-    return request('/api/correction-notes', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    return execute(
+      '/api/correction-notes',
+      { method: 'POST', body: JSON.stringify(data) },
+      () => localStore.createCorrectionNote(data)
+    );
   },
 
-  async respondCorrectionNote(id: string, responseNote: string, status: CorrectionNote['status']): Promise<CorrectionNote> {
-    return request(`/api/correction-notes/${id}/respond`, {
-      method: 'PUT',
-      body: JSON.stringify({ responseNote, status }),
-    });
+  async respondCorrectionNote(
+    id: string,
+    responseNote: string,
+    status: CorrectionNote['status']
+  ): Promise<CorrectionNote> {
+    return execute(
+      `/api/correction-notes/${id}/respond`,
+      { method: 'PUT', body: JSON.stringify({ responseNote, status }) },
+      () => localStore.respondCorrectionNote(id, responseNote, status)
+    );
   },
 
   // Settings
   async getSchoolSettings(): Promise<SchoolSettings> {
-    return request('/api/settings/school');
+    return execute('/api/settings/school', undefined, () => localStore.getSchoolSettings());
   },
 
   async updateSchoolSettings(data: SchoolSettings): Promise<SchoolSettings> {
-    return request('/api/settings/school', {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
+    return execute(
+      '/api/settings/school',
+      { method: 'PUT', body: JSON.stringify(data) },
+      () => localStore.updateSchoolSettings(data)
+    );
   },
 
   async getLetterheadSettings(): Promise<LetterheadSettings> {
-    return request('/api/settings/letterhead');
+    return execute('/api/settings/letterhead', undefined, () => localStore.getLetterheadSettings());
   },
 
   async updateLetterheadSettings(data: LetterheadSettings): Promise<LetterheadSettings> {
-    return request('/api/settings/letterhead', {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
+    return execute(
+      '/api/settings/letterhead',
+      { method: 'PUT', body: JSON.stringify(data) },
+      () => localStore.updateLetterheadSettings(data)
+    );
   },
 
   async getStaffSettings(): Promise<StaffSettings> {
-    return request('/api/settings/staff');
+    return execute('/api/settings/staff', undefined, () => localStore.getStaffSettings());
   },
 
   async updateStaffSettings(data: StaffSettings): Promise<StaffSettings> {
-    return request('/api/settings/staff', {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
+    return execute(
+      '/api/settings/staff',
+      { method: 'PUT', body: JSON.stringify(data) },
+      () => localStore.updateStaffSettings(data)
+    );
   },
 
   // Activity Logs
   async getActivityLogs(): Promise<ActivityLog[]> {
-    return request('/api/activity-logs');
+    return execute('/api/activity-logs', undefined, () => localStore.getActivityLogs());
   },
 
   // Backup & Restore
   async getBackups(): Promise<BackupRecord[]> {
-    return request('/api/backups');
+    return execute('/api/backups', undefined, () => localStore.getBackups());
   },
 
   async createBackup(notes?: string): Promise<BackupRecord> {
-    return request('/api/backup/create', {
-      method: 'POST',
-      body: JSON.stringify({ notes }),
-    });
+    return execute(
+      '/api/backup/create',
+      { method: 'POST', body: JSON.stringify({ notes }) },
+      () => localStore.createBackup(notes)
+    );
   },
 
   async restoreBackup(data: any): Promise<{ success: boolean }> {
-    return request('/api/backup/restore', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    return execute(
+      '/api/backup/restore',
+      { method: 'POST', body: JSON.stringify(data) },
+      () => localStore.restoreBackup(data)
+    );
   },
 
   async resetDemoData(): Promise<{ success: boolean }> {
-    return request('/api/backup/reset-demo', {
-      method: 'POST',
-    });
+    return execute(
+      '/api/backup/reset-demo',
+      { method: 'POST' },
+      () => localStore.resetDemoData()
+    );
   },
 };

@@ -108,10 +108,13 @@ export const LoginPage: React.FC = () => {
 
           {/* Quick Login Role Selector for Evaluator Testing */}
           <div className="pt-4 border-t border-slate-200 space-y-3">
-            <div className="text-center">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+            <div className="text-center space-y-1">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
                 Akses Cepat Pengujian Peran
               </span>
+              <p className="text-[11px] text-slate-500">
+                Pilih peran di bawah atau login manual dengan username <span className="font-semibold text-slate-700 font-mono">admin</span>, <span className="font-semibold text-slate-700 font-mono">kepsek</span>, <span className="font-semibold text-slate-700 font-mono">pengurus</span>, atau <span className="font-semibold text-slate-700 font-mono">superadmin</span> (Password: <span className="font-semibold text-slate-700 font-mono">admin123</span> / <span className="font-semibold text-slate-700 font-mono">password123</span>)
+              </p>
             </div>
 
             <div className="space-y-1.5">

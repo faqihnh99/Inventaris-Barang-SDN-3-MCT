@@ -32,9 +32,13 @@ export interface DatabaseSchema {
   backups: BackupRecord[];
 }
 
-const DATA_DIR = path.resolve(process.cwd(), 'data');
+const isVercel = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NOW_REGION);
+const DATA_DIR = isVercel
+  ? path.resolve('/tmp', 'simaset_data')
+  : path.resolve(process.cwd(), 'data');
 const DB_FILE = path.join(DATA_DIR, 'simaset_db.json');
 const BACKUPS_DIR = path.join(DATA_DIR, 'backups');
+const DEFAULT_SOURCE_DB = path.resolve(process.cwd(), 'data', 'simaset_db.json');
 
 export function hashPassword(plain: string): string {
   return crypto.createHash('sha256').update(plain + 'simaset_salt_2026').digest('hex');
@@ -510,11 +514,15 @@ class DatabaseManager {
   }
 
   private ensureDirs() {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    if (!fs.existsSync(BACKUPS_DIR)) {
-      fs.mkdirSync(BACKUPS_DIR, { recursive: true });
+    try {
+      if (!fs.existsSync(DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+      }
+      if (!fs.existsSync(BACKUPS_DIR)) {
+        fs.mkdirSync(BACKUPS_DIR, { recursive: true });
+      }
+    } catch (e) {
+      console.warn('Directory creation skipped (read-only filesystem or restricted):', e);
     }
   }
 
@@ -527,9 +535,18 @@ class DatabaseManager {
           ...getInitialData(),
           ...parsed,
         };
+      } else if (fs.existsSync(DEFAULT_SOURCE_DB)) {
+        const raw = fs.readFileSync(DEFAULT_SOURCE_DB, 'utf-8');
+        const parsed = JSON.parse(raw);
+        const data = {
+          ...getInitialData(),
+          ...parsed,
+        };
+        this.saveDatabase(data);
+        return data;
       }
     } catch (err) {
-      console.error('Error loading database file, initializing fresh:', err);
+      console.warn('Error loading database file, initializing fresh:', err);
     }
     const initial = getInitialData();
     this.saveDatabase(initial);
@@ -538,11 +555,12 @@ class DatabaseManager {
 
   private saveDatabase(dataToSave = this.data) {
     try {
+      this.ensureDirs();
       const tempPath = DB_FILE + '.tmp';
       fs.writeFileSync(tempPath, JSON.stringify(dataToSave, null, 2), 'utf-8');
       fs.renameSync(tempPath, DB_FILE);
     } catch (err) {
-      console.error('Failed to write database atomically:', err);
+      console.warn('Failed to write database file (keeping in memory):', err);
     }
   }
 
