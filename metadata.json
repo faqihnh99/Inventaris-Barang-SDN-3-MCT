@@ -1,0 +1,8 @@
+{
+  "name": "SIM-ASET - Sistem Inventaris Barang Sekolah KIB B & KIB E",
+  "description": "Aplikasi inventaris barang sekolah berbasis web realtime dan multi-pengguna untuk pengelolaan KIB B, KIB E, kebutuhan, pengadaan, label QR code, dan laporan administrasi sekolah.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,996 @@
+MASTER PROMPT FINAL
+APLIKASI INVENTARIS BARANG SEKOLAH BERBASIS WEB, REALTIME, DAN MULTI-PENGGUNA
+Buatkan aplikasi inventaris barang sekolah berbasis web yang lengkap, profesional, modern, responsif, aman, dan siap digunakan untuk kegiatan administrasi sekolah sehari-hari.
+Aplikasi harus menggunakan Bahasa Indonesia, memiliki database terpusat, mendukung login dari beberapa perangkat secara bersamaan, dan menyediakan integrasi antara inventaris, kebutuhan barang, pengadaan, laporan, serta dokumen administrasi sekolah.
+Penting: aplikasi bukan sekadar desain UI atau prototype. Semua fitur utama harus benar-benar berfungsi, tersimpan di database, dan dapat digunakan sesuai hak akses setiap pengguna.
+1. TUJUAN APLIKASI
+Aplikasi digunakan untuk:
+1.	Mengelola KIB B – Peralatan dan Mesin.
+2.	Mengelola KIB E – Buku.
+3.	Mengelola semua inventaris dalam satu tempat.
+4.	Mengelola lokasi dan perpindahan barang.
+5.	Mengelola kebutuhan barang sekolah.
+6.	Menghitung kekurangan barang secara otomatis.
+7.	Menghitung estimasi anggaran kebutuhan.
+8.	Mengelola pengajuan dan proses pengadaan.
+9.	Mengintegrasikan barang hasil pengadaan ke inventaris.
+10.	Membuat QR Code dan label barang.
+11.	Mengelola laporan inventaris dan kebutuhan.
+12.	Import dan export Excel, Word, serta PDF.
+13.	Mengatur kop surat, logo, dan identitas sekolah.
+14.	Mengatur nama Pengurus Barang Pembantu dan petugas lainnya.
+15.	Mendukung login dari banyak perangkat secara realtime.
+16.	Mengatur hak akses Tenaga Administrasi, Pengurus Barang, dan Kepala Sekolah.
+17.	Mencatat riwayat aktivitas dan perubahan data.
+18.	Menyediakan backup database dan dokumentasi instalasi.
+________________________________________
+2. TEKNOLOGI DAN ARSITEKTUR
+Bangun aplikasi menggunakan teknologi yang stabil, aman, dan mudah dipelihara.
+Jika target deployment adalah hosting/cPanel, gunakan arsitektur yang kompatibel, misalnya:
+•	Backend: PHP dengan Laravel atau framework PHP stabil lainnya.
+•	Database: MySQL atau MariaDB.
+•	Frontend: HTML, CSS, JavaScript, dan framework UI yang sesuai.
+•	Autentikasi: session atau mekanisme autentikasi yang aman.
+•	Realtime: WebSocket, Server-Sent Events, atau mekanisme lain yang didukung hosting.
+•	Import/export: library yang sesuai untuk XLSX, DOCX, dan PDF.
+•	QR Code: library pembuat QR Code yang stabil.
+Gunakan database pusat yang sama untuk semua perangkat.
+Pisahkan kode berdasarkan modul agar mudah dikembangkan, diuji, dan diperbaiki.
+Jika hosting tidak mendukung WebSocket, gunakan alternatif sinkronisasi berkala yang efisien. Jangan membuat database lokal terpisah untuk setiap perangkat.
+________________________________________
+3. LOGIN DAN MANAJEMEN PENGGUNA
+Buat halaman login profesional dengan username dan password.
+Sediakan tiga peran utama:
+A. Tenaga Administrasi
+Hak akses dapat mencakup:
+•	Melihat dashboard.
+•	Menginput data inventaris sesuai kewenangan.
+•	Mengelola data administrasi.
+•	Menginput kebutuhan barang.
+•	Melihat jumlah barang tersedia dan kekurangan.
+•	Memantau status pengadaan.
+•	Melakukan pencarian dan filter.
+•	Import Excel.
+•	Export laporan sesuai izin.
+•	Melihat riwayat aktivitas yang relevan.
+B. Pengurus Barang
+Hak akses dapat mencakup:
+•	Mengelola KIB B.
+•	Mengelola KIB E.
+•	Mengelola kode barang dan nomor register.
+•	Mengelola kondisi barang.
+•	Mengelola lokasi barang.
+•	Mencatat perpindahan barang.
+•	Membuat dan mencetak QR Code.
+•	Memeriksa data inventaris.
+•	Mengelola penerimaan barang hasil pengadaan sesuai kewenangan.
+•	Melihat kebutuhan dan pengadaan.
+•	Membuat laporan inventaris.
+•	Melakukan import dan export sesuai izin.
+C. Kepala Sekolah
+Kepala Sekolah memiliki akun khusus dengan mode Monitoring / Read Only.
+Kepala Sekolah dapat melihat seluruh data yang sudah diinput oleh Tenaga Administrasi dan Pengurus Barang tanpa perlu melakukan input ulang.
+Kepala Sekolah dapat melihat:
+•	Dashboard inventaris.
+•	KIB B dan KIB E.
+•	Seluruh daftar barang.
+•	Nilai inventaris.
+•	Kondisi dan penempatan barang.
+•	Kebutuhan barang.
+•	Jumlah barang yang kurang.
+•	Estimasi anggaran kebutuhan.
+•	Status pengadaan.
+•	Barang yang sudah diterima.
+•	Laporan inventaris.
+•	Laporan kebutuhan.
+•	Riwayat input.
+•	Riwayat perubahan.
+•	Nama petugas yang melakukan input.
+•	Waktu pembaruan terakhir.
+Kepala Sekolah tidak dapat menambah, mengedit, atau menghapus data sumber dalam mode monitoring, baik melalui tampilan aplikasi maupun API.
+Sediakan fitur Catatan/Koreksi Data agar Kepala Sekolah dapat memberikan catatan kepada petugas tanpa mengubah data sumber secara langsung.
+Hak untuk mencetak atau mengunduh laporan dapat diatur oleh administrator.
+D. Administrator Sistem
+Sediakan administrator untuk mengelola:
+•	Akun pengguna.
+•	Peran dan izin.
+•	Pengaturan aplikasi.
+•	Master data.
+•	Identitas sekolah.
+•	Kop surat.
+•	Nama petugas.
+•	Backup database.
+•	Audit log.
+Jika akun administrator terpisah dari tiga akun operasional, jelaskan perbedaannya dengan jelas.
+E. Manajemen Akun
+Sediakan menu:
+•	Tambah Pengguna.
+•	Edit Pengguna.
+•	Nonaktifkan Pengguna.
+•	Reset Password.
+•	Ubah Peran.
+•	Atur Hak Akses.
+•	Riwayat Login.
+Setiap pengguna memiliki akun sendiri. Password harus disimpan menggunakan hashing yang aman.
+________________________________________
+4. DASHBOARD UTAMA
+Buat dashboard modern dengan statistik otomatis:
+•	Total inventaris.
+•	Total KIB B.
+•	Total KIB E.
+•	Total barang kondisi baik.
+•	Total barang rusak ringan.
+•	Total barang rusak berat.
+•	Total nilai inventaris.
+•	Total kebutuhan.
+•	Total kekurangan barang.
+•	Total estimasi anggaran kebutuhan.
+•	Jumlah kebutuhan sangat mendesak.
+•	Pengadaan sedang berlangsung.
+•	Pengadaan selesai.
+Tampilkan grafik:
+•	Inventaris berdasarkan KIB.
+•	Inventaris berdasarkan lokasi.
+•	Inventaris berdasarkan kondisi.
+•	Inventaris berdasarkan tahun.
+•	Kebutuhan berdasarkan KIB.
+•	Kebutuhan berdasarkan lokasi.
+•	Kebutuhan berdasarkan prioritas.
+•	Pengadaan berdasarkan status.
+Semua statistik harus bersumber dari database dan diperbarui ketika data berubah.
+________________________________________
+5. KIB B – PERALATAN DAN MESIN
+Buat menu KIB B – Peralatan dan Mesin.
+Contoh barang:
+•	Komputer dan laptop.
+•	Printer dan scanner.
+•	Proyektor.
+•	Televisi.
+•	AC dan kipas angin.
+•	Speaker dan amplifier.
+•	Mesin fotokopi.
+•	Meja dan kursi.
+•	Lemari.
+•	Peralatan kantor.
+•	Peralatan pembelajaran.
+•	Peralatan elektronik.
+•	Peralatan dan mesin lainnya.
+Data minimal:
+1.	Nomor.
+2.	Kode Barang.
+3.	Nama Barang.
+4.	Merk/Type.
+5.	Spesifikasi.
+6.	Nomor Register.
+7.	Tahun Perolehan.
+8.	Jumlah.
+9.	Satuan.
+10.	Harga Satuan.
+11.	Nilai Total.
+12.	Sumber Dana.
+13.	Kondisi.
+14.	Lokasi Penempatan.
+15.	Keterangan.
+16.	Foto Barang.
+17.	QR Code.
+Kondisi barang:
+•	Baik.
+•	Rusak Ringan.
+•	Rusak Berat.
+Nilai total dihitung otomatis berdasarkan jumlah dan harga satuan.
+Struktur kolom harus dapat disesuaikan dengan format KIB B yang berlaku di sekolah tanpa menghilangkan data utama.
+________________________________________
+6. KIB E – BUKU
+Buat menu KIB E – Buku.
+Data minimal:
+1.	Nomor.
+2.	Kode Buku.
+3.	Judul Buku.
+4.	Mata Pelajaran.
+5.	Kelas.
+6.	Pengarang.
+7.	Penerbit.
+8.	Tahun Terbit.
+9.	ISBN.
+10.	Jumlah.
+11.	Satuan.
+12.	Harga Satuan.
+13.	Nilai Total.
+14.	Sumber Dana.
+15.	Kondisi.
+16.	Lokasi Penempatan.
+17.	Keterangan.
+18.	Foto Buku.
+19.	QR Code.
+Contoh:
+•	Buku Bahasa Indonesia Kelas 1 → Kelas 1.
+•	Buku Matematika Kelas 2 → Kelas 2.
+•	Buku cerita anak → Perpustakaan.
+Sediakan fitur pencarian berdasarkan judul, ISBN, pengarang, penerbit, mata pelajaran, kelas, dan lokasi.
+________________________________________
+7. SEMUA INVENTARIS
+Buat menu Semua Inventaris untuk menampilkan data KIB B dan KIB E dalam satu tabel.
+Kolom:
+•	Nomor.
+•	Kode Barang.
+•	Nama/Judul.
+•	KIB.
+•	Jumlah.
+•	Tahun.
+•	Kondisi.
+•	Lokasi.
+•	Nilai.
+•	Aksi.
+Sediakan:
+•	Search.
+•	Filter KIB.
+•	Filter lokasi.
+•	Filter kondisi.
+•	Filter tahun.
+•	Filter sumber dana.
+•	Sorting.
+•	Pagination.
+•	Detail.
+•	Edit.
+•	Hapus.
+•	Cetak.
+•	QR Code.
+Nomor register dan kode barang harus divalidasi agar tidak terjadi duplikasi.
+Setiap penghapusan data harus menggunakan konfirmasi dan mengikuti hak akses.
+________________________________________
+8. MASTER LOKASI
+Buat menu Master Lokasi.
+Lokasi awal:
+•	Kelas 1.
+•	Kelas 2.
+•	Kelas 3.
+•	Kelas 4.
+•	Kelas 5.
+•	Kelas 6.
+•	Ruang Guru.
+•	Ruang Kepala Sekolah.
+•	Ruang Tata Usaha.
+•	Perpustakaan.
+•	Gudang.
+•	Laboratorium.
+•	UKS.
+•	Ruang Operator.
+•	Lokasi Lainnya.
+Administrator dapat menambah, mengedit, atau menonaktifkan lokasi.
+Setiap barang harus memiliki lokasi penempatan yang jelas.
+Contoh:
+•	Printer Epson L3210 → Ruang Guru.
+•	Laptop → Ruang Tata Usaha.
+•	Proyektor → Kelas 6.
+•	Buku Bahasa Indonesia → Kelas 1.
+•	Buku cerita → Perpustakaan.
+________________________________________
+9. PERPINDAHAN BARANG
+Sediakan fitur Pindahkan Barang.
+Data perpindahan:
+•	Barang.
+•	Lokasi Asal.
+•	Lokasi Tujuan.
+•	Tanggal Perpindahan.
+•	Petugas.
+•	Keterangan.
+Contoh:
+Printer dipindahkan dari Ruang Guru ke Kelas 4.
+Sistem harus menyimpan histori perpindahan dan memperbarui lokasi barang setelah transaksi berhasil.
+Riwayat lama tidak boleh hilang.
+________________________________________
+10. MENU KEBUTUHAN BARANG
+Buat menu Kebutuhan Barang Inventaris yang terintegrasi dengan KIB B dan KIB E.
+Kebutuhan dapat berasal dari usulan Tenaga Administrasi, Pengurus Barang, atau petugas yang memiliki izin.
+Setiap kebutuhan memiliki kode unik dan status yang jelas.
+Kebutuhan KIB B
+Data:
+•	Nomor.
+•	Kode Kebutuhan.
+•	KIB.
+•	Nama Barang.
+•	Merk/Type.
+•	Spesifikasi.
+•	Jumlah Dibutuhkan.
+•	Jumlah Tersedia.
+•	Jumlah Kekurangan.
+•	Satuan.
+•	Perkiraan Harga Satuan.
+•	Perkiraan Total Anggaran.
+•	Prioritas.
+•	Lokasi yang Membutuhkan.
+•	Sumber Dana yang Direncanakan.
+•	Tahun Kebutuhan.
+•	Status Pengadaan.
+•	Keterangan.
+Kebutuhan KIB E
+Data:
+•	Nomor.
+•	Kode Kebutuhan.
+•	KIB.
+•	Judul Buku.
+•	Mata Pelajaran.
+•	Kelas.
+•	Pengarang.
+•	Penerbit.
+•	Tahun Terbit.
+•	ISBN.
+•	Jumlah Dibutuhkan.
+•	Jumlah Tersedia.
+•	Jumlah Kekurangan.
+•	Satuan.
+•	Perkiraan Harga Satuan.
+•	Perkiraan Total Anggaran.
+•	Prioritas.
+•	Lokasi yang Membutuhkan.
+•	Tahun Kebutuhan.
+•	Status Pengadaan.
+•	Keterangan.
+________________________________________
+11. PERHITUNGAN KEBUTUHAN OTOMATIS
+Gunakan rumus:
+Jumlah Kekurangan = Maksimum (0, Jumlah Dibutuhkan − Jumlah Tersedia)
+Contoh:
+Dibutuhkan: 10 laptop.
+Tersedia: 6 laptop.
+Kekurangan: 4 laptop.
+Jika jumlah tersedia telah memenuhi kebutuhan, jumlah kekurangan menjadi nol.
+Rumus anggaran:
+Total Anggaran = Jumlah Kekurangan × Harga Satuan
+Contoh:
+•	Printer dibutuhkan: 5.
+•	Tersedia: 2.
+•	Kekurangan: 3.
+•	Harga satuan: Rp2.500.000.
+•	Estimasi anggaran: Rp7.500.000.
+Jika data inventaris berubah, jumlah tersedia dan kekurangan harus dihitung ulang secara konsisten.
+Sediakan mekanisme penentuan barang yang dianggap sama, misalnya berdasarkan kode barang, kategori, spesifikasi, kelas, atau ISBN. Jangan mencampur barang yang berbeda hanya karena namanya mirip.
+________________________________________
+12. PRIORITAS DAN STATUS KEBUTUHAN
+Pilihan prioritas:
+•	Sangat Mendesak.
+•	Mendesak.
+•	Sedang.
+•	Rendah.
+Status kebutuhan dan pengadaan:
+•	Belum Diajukan.
+•	Pengajuan.
+•	Menunggu Persetujuan.
+•	Disetujui.
+•	Dalam Proses Pengadaan.
+•	Sudah Dibeli.
+•	Sudah Diterima.
+•	Ditolak.
+•	Ditunda.
+•	Selesai.
+Tampilkan indikator visual dan filter berdasarkan prioritas serta status.
+Status Terpenuhi hanya boleh diberikan ketika kebutuhan benar-benar terpenuhi berdasarkan perhitungan inventaris dan jumlah yang masih diperlukan.
+________________________________________
+13. PENGADAAN BARANG
+Buat menu Pengadaan.
+Alur pengadaan:
+Kebutuhan Barang → Pengajuan → Persetujuan → Proses Pengadaan → Barang Dibeli → Barang Diterima → Masuk Inventaris.
+Data pengadaan:
+•	Nomor Pengadaan.
+•	Kode Kebutuhan.
+•	Nama Barang.
+•	KIB.
+•	Jumlah Diajukan.
+•	Jumlah Disetujui.
+•	Jumlah Dibeli.
+•	Jumlah Diterima.
+•	Harga Satuan Aktual.
+•	Nilai Pengadaan.
+•	Sumber Dana.
+•	Tanggal Pengajuan.
+•	Tanggal Persetujuan.
+•	Tanggal Penerimaan.
+•	Penyedia, jika diperlukan.
+•	Petugas.
+•	Status.
+•	Keterangan.
+Sediakan tombol Masukkan ke Inventaris setelah barang diterima dan diverifikasi.
+Sistem harus membuka form KIB B atau KIB E sesuai jenis barang, mengisi data yang sudah tersedia, dan meminta pengguna melengkapi informasi yang masih diperlukan.
+Barang tidak boleh dimasukkan dua kali akibat tombol diklik berulang kali.
+Gunakan transaksi database agar proses penerimaan, penambahan inventaris, dan pembaruan kebutuhan berjalan konsisten.
+________________________________________
+14. INTEGRASI PENGADAAN DENGAN INVENTARIS
+Contoh:
+Sekolah membutuhkan 10 laptop.
+Jumlah tersedia: 6.
+Kekurangan: 4.
+Setelah 4 laptop diterima:
+1.	Petugas memverifikasi penerimaan.
+2.	Petugas memilih lokasi penempatan.
+3.	Sistem menambahkan barang ke KIB B.
+4.	Sistem memperbarui jumlah inventaris.
+5.	Sistem memperbarui jumlah kekurangan.
+6.	Sistem memperbarui status kebutuhan.
+7.	Sistem membuat QR Code jika diperlukan.
+8.	Sistem mencatat petugas dan waktu transaksi.
+9.	Perubahan terlihat pada perangkat lain.
+Untuk buku, lakukan proses yang sama pada KIB E.
+Jangan mengurangi kebutuhan dua kali atau menghitung barang yang sama secara ganda.
+Jika penerimaan hanya sebagian, sistem harus memperbarui jumlah yang diterima dan menyisakan kekurangan yang belum terpenuhi.
+________________________________________
+15. QR CODE DAN LABEL BARANG
+Buat QR Code unik untuk setiap barang atau unit aset sesuai kebutuhan pengelolaan.
+QR Code dapat menampilkan:
+•	Kode Barang.
+•	Nama Barang.
+•	KIB.
+•	Nomor Register.
+•	Lokasi.
+•	Kondisi.
+•	Tahun.
+Sediakan:
+•	Lihat QR Code.
+•	Download QR Code.
+•	Cetak Label.
+•	Cetak Label Massal.
+•	Pindai QR Code.
+•	Lihat Detail Barang.
+QR Code harus mengarah ke halaman detail barang yang memerlukan autentikasi apabila informasinya bersifat internal.
+________________________________________
+16. MASTER DATA
+Buat menu Master Data:
+•	Kategori.
+•	Lokasi.
+•	Kondisi.
+•	Sumber Dana.
+•	Satuan.
+•	Merk.
+•	Tahun.
+•	Mata Pelajaran.
+•	Kelas.
+•	Prioritas.
+•	Status Pengadaan.
+•	Jenis Barang.
+Sediakan tambah, edit, pencarian, dan penonaktifan data master sesuai hak akses.
+Data master yang sudah digunakan dalam transaksi tidak boleh dihapus secara sembarangan hingga merusak riwayat.
+________________________________________
+17. IMPORT EXCEL
+Sediakan menu Import Excel dan tombol Download Template Excel.
+Template harus sesuai dengan struktur import aplikasi.
+Template KIB B
+Kolom:
+No, Kode Barang, Nama Barang, Merk/Type, Spesifikasi, Nomor Register, Tahun Perolehan, Jumlah, Satuan, Harga Satuan, Nilai Total, Sumber Dana, Kondisi, Penempatan, Keterangan.
+Template KIB E
+Kolom:
+No, Kode Buku, Judul Buku, Mata Pelajaran, Kelas, Pengarang, Penerbit, Tahun Terbit, ISBN, Jumlah, Satuan, Harga Satuan, Nilai Total, Sumber Dana, Kondisi, Penempatan, Keterangan.
+Template Kebutuhan KIB B
+Kolom:
+Kode Kebutuhan, Nama Barang, Merk/Type, Spesifikasi, Jumlah Dibutuhkan, Jumlah Tersedia, Satuan, Harga Satuan, Prioritas, Lokasi, Tahun, Sumber Dana, Status, Keterangan.
+Template Kebutuhan KIB E
+Kolom:
+Kode Kebutuhan, Judul Buku, Mata Pelajaran, Kelas, Pengarang, Penerbit, ISBN, Jumlah Dibutuhkan, Jumlah Tersedia, Satuan, Harga Satuan, Prioritas, Lokasi, Tahun, Sumber Dana, Status, Keterangan.
+Alur Import
+1.	Upload file.
+2.	Validasi jenis dan ukuran file.
+3.	Baca isi Excel.
+4.	Periksa struktur kolom.
+5.	Validasi data.
+6.	Periksa duplikasi.
+7.	Tampilkan preview.
+8.	Tampilkan jumlah data valid dan error.
+9.	Tampilkan alasan setiap error.
+10.	Minta konfirmasi pengguna.
+11.	Simpan data valid ke database.
+12.	Tampilkan hasil import.
+Jangan menyimpan data sebelum tombol Konfirmasi Import ditekan.
+Sediakan laporan error yang dapat diunduh untuk diperbaiki.
+________________________________________
+18. EXPORT EXCEL, WORD, DAN PDF
+Semua data dan laporan yang diizinkan dapat diekspor ke:
+•	Excel (.xlsx).
+•	Word (.docx).
+•	PDF.
+•	Print.
+Jenis laporan:
+1.	Semua Inventaris.
+2.	KIB B.
+3.	KIB E.
+4.	Inventaris Berdasarkan Lokasi.
+5.	Inventaris Berdasarkan Kondisi.
+6.	Inventaris Berdasarkan Tahun.
+7.	Inventaris Berdasarkan Sumber Dana.
+8.	Barang Rusak.
+9.	Rekap Nilai Aset.
+10.	Rekap Jumlah Barang.
+11.	Semua Kebutuhan.
+12.	Kebutuhan KIB B.
+13.	Kebutuhan KIB E.
+14.	Kebutuhan Berdasarkan Lokasi.
+15.	Kebutuhan Berdasarkan Tahun.
+16.	Kebutuhan Mendesak.
+17.	Kebutuhan Belum Terpenuhi.
+18.	Kebutuhan Terpenuhi.
+19.	Rekap Status Pengadaan.
+20.	Rekap Anggaran.
+21.	Rekap Pengadaan.
+22.	Riwayat Perpindahan Barang.
+Semua laporan harus mengikuti filter yang dipilih pengguna.
+Format Excel
+•	Header jelas.
+•	Format tabel rapi.
+•	Lebar kolom sesuai.
+•	Filter tersedia.
+•	Nilai uang menggunakan format Rupiah.
+•	Angka tidak berubah menjadi teks secara tidak sengaja.
+•	Area cetak dapat diatur.
+•	Kop surat tersedia untuk lembar laporan yang sesuai.
+Format Word dan PDF
+•	Menggunakan kop surat.
+•	Memiliki judul laporan.
+•	Menampilkan periode atau tahun jika relevan.
+•	Tabel rapi.
+•	Nomor halaman jika diperlukan.
+•	Tanggal pembuatan.
+•	Area tanda tangan jika relevan.
+•	Tidak ada teks atau tabel terpotong.
+________________________________________
+19. PENGATURAN SEKOLAH
+Buat menu Pengaturan Sekolah.
+Data:
+•	Nama Instansi.
+•	Nama Dinas Pendidikan.
+•	Nama Sekolah.
+•	NPSN.
+•	NSS jika digunakan.
+•	Alamat.
+•	Desa/Kelurahan.
+•	Kecamatan.
+•	Kabupaten/Kota.
+•	Provinsi.
+•	Kode Pos.
+•	Nomor Telepon.
+•	Email.
+•	Website.
+•	Logo Kiri.
+•	Logo Kanan.
+Sediakan tombol Edit, Simpan, Batal, dan Pratinjau.
+Semua data harus tersimpan di database pusat dan digunakan oleh seluruh perangkat yang memiliki izin.
+________________________________________
+20. MENU EDIT KOP SURAT
+Buat menu khusus Pengaturan Kop Surat.
+Pengguna berwenang harus dapat mengedit kop surat tanpa mengubah source code.
+Data Kop Surat
+•	Nama Instansi/Pemerintah Daerah.
+•	Nama Dinas Pendidikan.
+•	Nama Sekolah.
+•	NPSN.
+•	NSS jika digunakan.
+•	Alamat Sekolah.
+•	Desa/Kelurahan.
+•	Kecamatan.
+•	Kabupaten/Kota.
+•	Provinsi.
+•	Kode Pos.
+•	Telepon.
+•	Email.
+•	Website.
+•	Logo Kiri.
+•	Logo Kanan.
+•	Jenis dan ukuran huruf.
+•	Ukuran logo.
+•	Warna teks.
+•	Ketebalan garis pembatas.
+•	Pengaturan baris yang ditampilkan.
+Sediakan upload, ganti, hapus, dan pratinjau logo.
+Format gambar yang diterima minimal PNG, JPG, dan JPEG dengan validasi file.
+Susunan Kop Surat
+•	Logo kiri di sisi kiri.
+•	Identitas instansi dan sekolah di tengah.
+•	Logo kanan di sisi kanan.
+•	Garis pembatas di bawah kop.
+Sediakan tombol:
+•	Edit Kop Surat.
+•	Pratinjau.
+•	Simpan Perubahan.
+•	Batal.
+•	Kembalikan ke Pengaturan Sebelumnya.
+Kop surat harus digunakan otomatis dalam Word, PDF, laporan, dan dokumen cetak yang relevan.
+Untuk Excel, sediakan format kop surat pada lembar laporan yang sesuai.
+Sediakan pengaturan A4, orientasi potret/lanskap, margin, ukuran logo, dan jarak kop dengan judul laporan.
+Perubahan kop surat diterapkan pada dokumen baru. File yang sudah diunduh sebelumnya tidak perlu berubah.
+________________________________________
+21. MENU EDIT NAMA PENGURUS BARANG PEMBANTU
+Buat menu Pengaturan Pejabat dan Petugas.
+Nama petugas harus dapat diubah langsung dari aplikasi tanpa perlu mengedit kode program.
+Sediakan kolom:
+1.	Nama Kepala Sekolah.
+2.	NIP Kepala Sekolah.
+3.	Jabatan Kepala Sekolah.
+4.	Nama Pengurus Barang.
+5.	NIP Pengurus Barang.
+6.	Jabatan Pengurus Barang.
+7.	Nama Pengurus Barang Pembantu.
+8.	NIP Pengurus Barang Pembantu.
+9.	Jabatan Pengurus Barang Pembantu.
+10.	Nama Tenaga Administrasi.
+11.	NIP Tenaga Administrasi jika ada.
+12.	Jabatan Tenaga Administrasi.
+NIP atau data lain yang tidak dimiliki petugas boleh dikosongkan sesuai kebutuhan.
+Sediakan tombol:
+•	Edit Data Petugas.
+•	Simpan Perubahan.
+•	Batal.
+•	Pratinjau Dokumen.
+Nama Pengurus Barang Pembantu harus dapat diganti kapan saja.
+Setelah disimpan, nama dan NIP terbaru harus otomatis digunakan pada dokumen baru yang relevan, seperti:
+•	Laporan KIB B.
+•	Laporan KIB E.
+•	Laporan Inventaris.
+•	Laporan Kebutuhan.
+•	Laporan Pengadaan.
+•	Berita Acara Penerimaan.
+•	Laporan Perpindahan Barang.
+•	Dokumen administrasi lain yang menggunakan identitas petugas.
+Sediakan pilihan untuk menampilkan atau menyembunyikan nama petugas pada dokumen tertentu.
+Nama pejabat yang ditampilkan pada dokumen harus berasal dari pengaturan identitas, sedangkan riwayat aktivitas harus tetap menyimpan akun yang benar-benar melakukan tindakan.
+Perubahan nama petugas tidak boleh mengubah histori transaksi sebelumnya.
+________________________________________
+22. FORMAT TANDA TANGAN
+Sediakan bagian tanda tangan yang dapat diatur pada laporan atau dokumen yang relevan.
+Contoh:
+Mengetahui,
+Kepala Sekolah
+(tanda tangan)
+Nama Kepala Sekolah
+NIP.
+Pengurus Barang
+(tanda tangan)
+Nama Pengurus Barang
+NIP.
+Pengurus Barang Pembantu
+(tanda tangan)
+Nama Pengurus Barang Pembantu
+NIP.
+Jangan selalu menampilkan seluruh blok tanda tangan. Sediakan pilihan sesuai kebutuhan dokumen.
+Pastikan nama dan jabatan mengikuti pengaturan sekolah terbaru.
+________________________________________
+23. DASHBOARD KHUSUS KEPALA SEKOLAH
+Buat dashboard monitoring dengan tampilan ringkas dan profesional.
+Tampilkan:
+•	Total inventaris.
+•	Nilai inventaris.
+•	Jumlah barang rusak.
+•	Jumlah kebutuhan belum terpenuhi.
+•	Total estimasi anggaran.
+•	Kebutuhan mendesak.
+•	Pengadaan berjalan.
+•	Pengadaan selesai.
+•	Input terbaru.
+•	Perubahan data terbaru.
+•	Petugas yang melakukan input.
+•	Waktu pembaruan terakhir.
+Sediakan filter periode, KIB, lokasi, kondisi, sumber dana, dan status pengadaan.
+Kepala Sekolah harus dapat melihat data detail sesuai izin tanpa dapat mengubah data sumber.
+________________________________________
+24. REALTIME DAN SINKRONISASI MULTI-PERANGKAT
+Aplikasi harus dapat digunakan bersamaan dari beberapa perangkat yang terhubung ke internet.
+Contoh:
+•	Gawai A: Tenaga Administrasi.
+•	Gawai B: Pengurus Barang.
+•	Gawai C: Kepala Sekolah.
+Jika Tenaga Administrasi memasukkan data dari Gawai A, data harus tersimpan di database pusat dan muncul di Gawai B serta Gawai C sesuai hak akses.
+Jika Pengurus Barang mengubah kondisi atau lokasi barang dari Gawai B, perubahan harus terlihat di perangkat lainnya tanpa input ulang.
+Ketentuan:
+1.	Semua perangkat memakai database pusat yang sama.
+2.	Data tersimpan secara permanen setelah server mengonfirmasi keberhasilan penyimpanan.
+3.	Perubahan ditampilkan otomatis, idealnya dalam hitungan detik.
+4.	Pengguna tidak perlu refresh manual.
+5.	Dashboard dan laporan mengikuti data terbaru.
+6.	Tampilkan status koneksi dan sinkronisasi.
+7.	Jika penyimpanan gagal, tampilkan pesan kegagalan dengan jelas.
+8.	Jangan menyatakan data tersimpan di server jika server belum mengonfirmasi.
+9.	Batasi data yang dikirim sesuai hak akses.
+10.	Semua operasi tulis harus divalidasi di server.
+Gunakan WebSocket, Server-Sent Events, atau teknologi lain yang sesuai. Jika tidak tersedia, gunakan polling berkala sebagai alternatif.
+Penanganan Konflik
+Jika dua pengguna mengubah barang yang sama secara bersamaan:
+•	Gunakan version checking atau optimistic locking.
+•	Hindari perubahan terbaru menimpa perubahan pengguna lain secara diam-diam.
+•	Tampilkan pemberitahuan konflik.
+•	Berikan pilihan memuat data terbaru atau meninjau perubahan.
+•	Simpan riwayat perubahan.
+Jika mendukung mode offline, gunakan antrean sinkronisasi dan penanganan konflik yang aman. Jika tidak, tampilkan status offline dengan jelas.
+________________________________________
+25. AUDIT TRAIL DAN RIWAYAT AKTIVITAS
+Catat aktivitas penting:
+•	Login dan logout.
+•	Tambah data.
+•	Edit data.
+•	Hapus data.
+•	Perpindahan barang.
+•	Perubahan kondisi.
+•	Penerimaan pengadaan.
+•	Import Excel.
+•	Export data.
+•	Perubahan nama petugas.
+•	Perubahan kop surat.
+•	Perubahan hak akses.
+Informasi yang dicatat:
+•	Akun pengguna.
+•	Peran.
+•	Jenis aktivitas.
+•	Jenis data.
+•	ID data terkait.
+•	Waktu aktivitas.
+•	Nilai sebelum perubahan.
+•	Nilai sesudah perubahan.
+•	Informasi perangkat atau sesi jika tersedia.
+Log harus dibatasi dari pengubahan oleh pengguna biasa.
+Kepala Sekolah dapat melihat riwayat yang relevan untuk monitoring.
+________________________________________
+26. KONSISTENSI DATA DAN TRANSAKSI
+Pastikan sistem tidak membuat data inventaris atau pengadaan ganda.
+Gunakan:
+•	Primary key.
+•	Foreign key.
+•	Unique constraint.
+•	Validasi server-side.
+•	Transaksi database.
+•	Version checking.
+•	Idempotency untuk operasi penting.
+•	Soft delete bila sesuai.
+Penerimaan barang harus memperbarui inventaris, jumlah yang diterima, dan status kebutuhan secara konsisten.
+Jika proses gagal di tengah jalan, seluruh perubahan transaksi harus dibatalkan atau dipulihkan secara aman.
+________________________________________
+27. LAPORAN KEBUTUHAN
+Sediakan tabel rekap dengan kolom:
+•	Nomor.
+•	Nama Barang.
+•	KIB.
+•	Jumlah Dibutuhkan.
+•	Jumlah Tersedia.
+•	Jumlah Kekurangan.
+•	Harga Satuan.
+•	Total Anggaran.
+•	Prioritas.
+•	Lokasi.
+•	Tahun.
+•	Status Pengadaan.
+Contoh:
+Laptop | KIB B | 10 | 6 | 4 | Mendesak.
+Printer | KIB B | 5 | 3 | 2 | Sedang.
+Buku Bahasa Indonesia | KIB E | 30 | 20 | 10 | Mendesak.
+Anggaran harus dihitung berdasarkan kekurangan dan harga satuan yang relevan.
+Sediakan export Excel, Word, PDF, dan print.
+________________________________________
+28. BACKUP DAN RESTORE DATABASE
+Sediakan menu backup untuk administrator.
+Fitur:
+•	Backup database.
+•	Unduh file backup.
+•	Catat waktu backup.
+•	Catat pengguna yang melakukan backup.
+•	Restore database jika diizinkan.
+•	Konfirmasi sebelum restore.
+•	Validasi file backup.
+•	Perlindungan dari akses tidak berwenang.
+Jangan mengizinkan restore dilakukan tanpa konfirmasi yang jelas karena dapat menimpa data yang ada.
+Jelaskan cara melakukan backup dan pemulihan saat deployment.
+________________________________________
+29. KEAMANAN APLIKASI
+Terapkan:
+•	Password hashing.
+•	Autentikasi yang aman.
+•	Role-based access control.
+•	Validasi izin pada backend/API.
+•	CSRF protection.
+•	XSS protection.
+•	SQL injection protection.
+•	Validasi upload.
+•	Pembatasan ukuran file.
+•	Proteksi sesi.
+•	Pembatasan percobaan login.
+•	Validasi input server-side.
+•	Audit log.
+•	Pembatasan akses terhadap file dan laporan internal.
+Jangan hanya menyembunyikan tombol pada frontend. Setiap operasi harus tetap memeriksa izin pengguna di backend.
+________________________________________
+30. STRUKTUR DATABASE
+Rancang database relasional yang sesuai.
+Tabel minimal:
+•	users.
+•	roles.
+•	permissions.
+•	role_permissions.
+•	school_settings.
+•	letterhead_settings.
+•	staff_settings.
+•	categories.
+•	locations.
+•	conditions.
+•	fund_sources.
+•	units.
+•	inventory_items.
+•	kib_b_items atau struktur KIB B yang sesuai.
+•	kib_e_items atau struktur KIB E yang sesuai.
+•	inventory_photos.
+•	inventory_qrcodes.
+•	needs.
+•	need_items.
+•	procurements.
+•	procurement_items.
+•	location_histories.
+•	import_logs.
+•	export_logs.
+•	activity_logs.
+•	correction_notes.
+•	backup_logs.
+Tabel dapat disesuaikan dengan rancangan database, tetapi seluruh relasi harus benar dan tidak menimbulkan duplikasi yang tidak diperlukan.
+Pisahkan data identitas petugas untuk tanda tangan dokumen dari identitas akun pengguna yang melakukan aktivitas.
+________________________________________
+31. DESAIN UI DAN RESPONSIVITAS
+Gunakan desain:
+•	Modern.
+•	Profesional.
+•	Bersih.
+•	Rapi.
+•	Tidak terlalu ramai.
+•	Cocok untuk administrasi sekolah.
+•	Sidebar navigation.
+•	Dashboard cards.
+•	Data table.
+•	Modal.
+•	Form terstruktur.
+•	Search.
+•	Filter.
+•	Pagination.
+•	Toast notification.
+•	Confirmation dialog.
+Aplikasi harus nyaman digunakan pada:
+•	Komputer.
+•	Laptop.
+•	Tablet.
+•	Smartphone Android.
+Tabel lebar harus memiliki horizontal scrolling atau tampilan alternatif pada layar kecil.
+Buat dashboard Kepala Sekolah lebih berorientasi pada monitoring, sedangkan dashboard Tenaga Administrasi dan Pengurus Barang berorientasi pada pekerjaan masing-masing.
+________________________________________
+32. CONTOH DATA UNTUK PENGUJIAN
+Gunakan data dummy yang jelas ditandai sebagai data uji.
+KIB B
+Printer Epson L3210 — Ruang Guru — Baik — Tahun 2026.
+Laptop Lenovo — Tata Usaha — Baik.
+Proyektor Epson — Kelas 6 — Baik.
+KIB E
+Buku Bahasa Indonesia Kelas 1 — Kelas 1.
+Buku Matematika Kelas 2 — Kelas 2.
+Buku Cerita Anak — Perpustakaan.
+Kebutuhan
+Laptop:
+•	Dibutuhkan: 10.
+•	Tersedia: 6.
+•	Kekurangan: 4.
+Printer:
+•	Dibutuhkan: 5.
+•	Tersedia: 3.
+•	Kekurangan: 2.
+Buku Bahasa Indonesia:
+•	Dibutuhkan: 30.
+•	Tersedia: 20.
+•	Kekurangan: 10.
+Data dummy tidak boleh tercampur dengan data resmi setelah aplikasi digunakan. Sediakan cara untuk menghapus atau memisahkan data uji secara aman.
+________________________________________
+33. PENGUJIAN WAJIB
+Sebelum aplikasi dinyatakan selesai, lakukan pengujian berikut.
+Pengujian multi-perangkat
+1.	Login Tenaga Administrasi di Gawai A.
+2.	Login Pengurus Barang di Gawai B.
+3.	Login Kepala Sekolah di Gawai C.
+4.	Tambahkan barang dari Gawai A.
+5.	Pastikan data muncul di Gawai B dan Gawai C.
+6.	Edit lokasi dari Gawai B.
+7.	Pastikan perubahan terlihat di perangkat lain.
+8.	Pastikan Kepala Sekolah tidak dapat mengedit data sumber.
+Pengujian kebutuhan dan pengadaan
+1.	Tambahkan kebutuhan.
+2.	Pastikan kekurangan dihitung otomatis.
+3.	Ajukan pengadaan.
+4.	Catat penerimaan barang.
+5.	Masukkan barang ke inventaris.
+6.	Pastikan tidak ada transaksi ganda.
+7.	Pastikan jumlah kekurangan diperbarui.
+8.	Pastikan laporan menampilkan data terbaru.
+Pengujian pengaturan
+1.	Edit nama Pengurus Barang Pembantu.
+2.	Simpan perubahan.
+3.	Buka pratinjau laporan.
+4.	Pastikan nama baru digunakan pada dokumen yang sesuai.
+5.	Edit kop surat.
+6.	Ganti logo kiri dan kanan.
+7.	Simpan perubahan.
+8.	Pastikan kop terbaru digunakan saat export Word dan PDF.
+9.	Pastikan pengaturan terlihat konsisten di perangkat lain sesuai hak akses.
+Pengujian keamanan dan keandalan
+•	Pengguna tanpa izin tidak dapat mengubah data melalui API.
+•	Data tetap tersedia setelah logout dan login kembali.
+•	Import Excel memvalidasi data sebelum menyimpan.
+•	Konflik perubahan ditangani dengan benar.
+•	Backup dan restore diuji.
+•	Kegagalan koneksi ditampilkan dengan jelas.
+________________________________________
+34. KOMPATIBILITAS HOSTING DAN DEPLOYMENT
+Jika menggunakan PHP dan MySQL, pastikan aplikasi dapat dipasang pada hosting/cPanel.
+Berikan dokumentasi:
+1.	Persyaratan server.
+2.	Struktur folder.
+3.	Pembuatan database.
+4.	Konfigurasi koneksi database.
+5.	Pengaturan environment.
+6.	Import schema atau migration.
+7.	Pengaturan folder upload.
+8.	Konfigurasi autentikasi.
+9.	Konfigurasi HTTPS.
+10.	Konfigurasi realtime atau alternatif polling.
+11.	Pembuatan akun administrator.
+12.	Backup dan restore.
+13.	Deployment dan pembaruan aplikasi.
+Jangan menyimpan password database atau rahasia aplikasi di source code yang dapat diakses publik.
+________________________________________
+35. OUTPUT AKHIR YANG HARUS DIBERIKAN
+Berikan hasil pembangunan berupa:
+1.	Source code lengkap.
+2.	Frontend.
+3.	Backend.
+4.	Database schema.
+5.	SQL atau migration.
+6.	Sistem login.
+7.	Manajemen pengguna dan hak akses.
+8.	Dashboard.
+9.	CRUD KIB B.
+10.	CRUD KIB E.
+11.	Master lokasi.
+12.	Semua Inventaris.
+13.	Sistem kebutuhan.
+14.	Perhitungan kekurangan otomatis.
+15.	Perhitungan anggaran.
+16.	Sistem pengadaan.
+17.	Integrasi pengadaan ke inventaris.
+18.	Perpindahan barang.
+19.	QR Code.
+20.	Import Excel.
+21.	Template Excel.
+22.	Export Excel.
+23.	Export Word.
+24.	Export PDF.
+25.	Laporan.
+26.	Pengaturan sekolah.
+27.	Menu edit kop surat.
+28.	Menu edit nama Pengurus Barang Pembantu.
+29.	Menu edit identitas petugas.
+30.	Sinkronisasi realtime multi-perangkat.
+31.	Dashboard monitoring Kepala Sekolah.
+32.	Audit trail.
+33.	Backup dan restore.
+34.	Dokumentasi instalasi.
+35.	Dokumentasi penggunaan.
+36.	Panduan deployment cPanel.
+37.	Hasil pengujian fitur.
+Jangan membuat tombol yang hanya berfungsi sebagai hiasan. Setiap tombol harus menjalankan tindakan yang sesuai dan memberikan umpan balik yang jelas.
+Jangan mengklaim aplikasi sudah realtime, aman, atau siap produksi sebelum fungsi tersebut benar-benar diuji.
+________________________________________
+36. KRITERIA KEBERHASILAN AKHIR
+Aplikasi dinyatakan memenuhi kebutuhan jika:
+•	KIB B dan KIB E berfungsi.
+•	Inventaris dapat dikelola dari satu database pusat.
+•	Data tersinkronisasi di beberapa perangkat.
+•	Tenaga Administrasi dan Pengurus Barang dapat bekerja sesuai izin.
+•	Kepala Sekolah dapat memantau seluruh data yang relevan tanpa mengubah data sumber.
+•	Kebutuhan dan kekurangan dihitung otomatis.
+•	Pengadaan terhubung dengan inventaris.
+•	QR Code berfungsi.
+•	Import dan export berjalan dengan benar.
+•	Kop surat dapat diedit.
+•	Logo kiri dan kanan dapat diganti.
+•	Nama Pengurus Barang Pembantu dapat diedit.
+•	Identitas petugas otomatis digunakan pada dokumen yang relevan.
+•	Laporan menggunakan data terbaru.
+•	Aktivitas penting tercatat.
+•	Backup dan pemulihan dapat dilakukan.
+•	Hak akses diperiksa di backend.
+•	Aplikasi dapat dipasang sesuai dokumentasi.
+Instruksi penutup: Bangun aplikasi secara bertahap, mulai dari rancangan database, autentikasi dan hak akses, modul inventaris, kebutuhan, pengadaan, sinkronisasi realtime, pengaturan petugas dan kop surat, lalu laporan serta pengujian. Prioritaskan fungsi yang benar-benar berjalan, keamanan, konsistensi data, dan kemudahan penggunaan dalam administrasi sekolah sehari-hari. Jangan berhenti pada mockup atau prototype.
+
